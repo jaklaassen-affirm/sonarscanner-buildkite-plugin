@@ -29,7 +29,9 @@ function plugin_read_list_into_result() {
 }
 
 function docker_copy_as_sonar() {
-  tar -cf - $1 --owner sonar --group sonar | docker cp - $2
+  echo "Running docker cp ${1} ${2}:${3}"
+  docker cp "${1}" "${2}:${3}"
+  docker exec -u 0 -it "${2}" chown sonar:sonar -R "${3}/${1}"
 }
 
 function cleanup() {

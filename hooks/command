@@ -52,7 +52,7 @@ function execute_scanner() {
   DOCKERID=$("${DOCKER_CREATE_STATEMENT[@]}")
 
   echo "Running docker cp ${PWD}/. ${DOCKERID}:${WORKDIR}"
-  docker_copy_as_sonar "${PWD}/." "${DOCKERID}:${WORKDIR}"
+  docker_copy_as_sonar "${PWD}/." "${DOCKERID}" "${WORKDIR}"
 
   if [ -n "${ARTIFACT_PATHS[*]}" ]; then
     for arg in "${ARTIFACT_PATHS[@]}"; do
