@@ -28,6 +28,10 @@ function plugin_read_list_into_result() {
   [[ ${#result[@]} -gt 0 ]] || return 1
 }
 
+function docker_copy_as_sonar() {
+  tar -cf - $1 --owner sonar --group sonar | docker cp - $2
+}
+
 function cleanup() {
   echo "Running rm -rf ${LOCAL_ARTIFACTS_DIR}"
   rm -rf "${LOCAL_ARTIFACTS_DIR}"
