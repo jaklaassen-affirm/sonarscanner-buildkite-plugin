@@ -28,7 +28,7 @@ function plugin_read_list_into_result() {
   [[ ${#result[@]} -gt 0 ]] || return 1
 }
 
-function copy_as_sonar() {
+function docker_copy_as_sonar() {
   tar -cf - --owner sonar --group sonar $1 | docker cp - $2
 }
 
