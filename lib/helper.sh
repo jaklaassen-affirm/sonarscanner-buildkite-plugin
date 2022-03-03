@@ -28,10 +28,8 @@ function plugin_read_list_into_result() {
   [[ ${#result[@]} -gt 0 ]] || return 1
 }
 
-function docker_copy_as_sonar() {
-  echo "Running docker cp ${1} ${2}:${3}"
-  docker cp "${1}" "${2}:${3}"
-  docker exec -u 0 -it "${2}" chown sonar:sonar -R "${3}/${1}"
+function copy_as_sonar() {
+  tar -cf - --owner sonar --group sonar $1 | docker cp - $2
 }
 
 function cleanup() {
