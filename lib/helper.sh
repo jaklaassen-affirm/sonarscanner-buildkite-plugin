@@ -29,7 +29,7 @@ function plugin_read_list_into_result() {
 }
 
 function docker_copy_as_sonar() {
-  tar -cf - --owner sonar --group sonar $1 | docker cp - $2
+  tar -cf - --owner 1000 --group 1000 $1 | docker cp - $2
 }
 
 function cleanup() {
