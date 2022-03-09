@@ -18,14 +18,13 @@ ENABLE_BRANCH_SCAN=$(plugin_read_config ENABLE_BRANCH_SCAN 'false')
 ENABLE_PULL_REQUEST_SCAN=$(plugin_read_config ENABLE_PULL_REQUEST_SCAN 'false')
 IS_DOTNET=$(plugin_read_config IS_DOTNET 'false')
 LOCAL_ARTIFACTS_DIR="$(mktemp -d "${PWD}/artifacts-tmp.XXXXXXXXXX")"
-SCANNER_WORKDIR="$(mktemp -d "${PWD}/workdir-tmp.XXXXXXXXXX")"
 PROJECT_KEY=$(plugin_read_config PROJECT_KEY)
 SCAN_ONLY_IF_SOURCES_CHANGED=$(plugin_read_config SCAN_ONLY_IF_SOURCES_CHANGED 'false')
 SONARQUBE_HOST=$(plugin_read_config SONARQUBE_HOST)
 SOURCES=$(plugin_read_config SOURCES '.')
 USES_COMMUNITY_EDITION=$(plugin_read_config USES_COMMUNITY_EDITION 'true')
-WORKDIR="$(plugin_read_config WORKDIR '/workdir')"
-SONARSCANNER_ARGS=()
+DEFAULT_WORKDIR="/workdir"
+WORKDIR="$(plugin_read_config WORKDIR "${DEFAULT_WORKDIR}")"
 
 function execute_scanner() {
   echo "+++ :docker: :sonarqube: Starting sonar-scanner"
@@ -37,9 +36,6 @@ function execute_scanner() {
   DOCKER_CREATE_STATEMENT=()
   DOCKER_CREATE_STATEMENT+=("docker" "create")
   DOCKER_CREATE_STATEMENT+=("--workdir" "${WORKDIR}")
-
-  mkdir "${SCANNER_WORKDIR}/.scannerwork"
-  docker_copy_as_sonar "${SCANNER_WORKDIR}/.scannerwork" "${DOCKERID}:${WORKDIR}"
 
   if [[ $IS_DOTNET == "true" ]]; then
     DOCKER_CREATE_STATEMENT+=("--env" "SONARQUBE_LOGIN=${SONARQUBE_LOGIN}")
@@ -56,6 +52,7 @@ function execute_scanner() {
   DOCKERID=$("${DOCKER_CREATE_STATEMENT[@]}")
 
   docker_copy_as_sonar "${PWD}/." "${DOCKERID}:${WORKDIR}"
+
 
   if [ -n "${ARTIFACT_PATHS[*]}" ]; then
     for arg in "${ARTIFACT_PATHS[@]}"; do
@@ -149,6 +146,11 @@ elif plugin_read_list_into_result BUILDKITE_PLUGIN_SONARSCANNER_ARTIFACTS; then
   for arg in "${result[@]}"; do
     ARTIFACT_PATHS+=("${arg}")
   done
+fi
+
+if [[ $WORKDIR != $DEFAULT_WORKDIR ]]; then
+  mkdir "${LOCAL_ARTIFACTS_DIR}/.scannerwork"
+  ARTIFACT_PATHS+=(".scannerwork")
 fi
 
 # Checking if trying to do branch or PR scan on community
