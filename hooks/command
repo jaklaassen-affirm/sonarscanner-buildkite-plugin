@@ -150,7 +150,6 @@ fi
 
 if [[ $WORKDIR != $DEFAULT_WORKDIR ]]; then
   mkdir "${LOCAL_ARTIFACTS_DIR}/.scannerwork"
-  ARTIFACT_PATHS+=(".scannerwork")
 fi
 
 # Checking if trying to do branch or PR scan on community
