@@ -18,6 +18,7 @@ ENABLE_BRANCH_SCAN=$(plugin_read_config ENABLE_BRANCH_SCAN 'false')
 ENABLE_PULL_REQUEST_SCAN=$(plugin_read_config ENABLE_PULL_REQUEST_SCAN 'false')
 IS_DOTNET=$(plugin_read_config IS_DOTNET 'false')
 LOCAL_ARTIFACTS_DIR="$(mktemp -d "${PWD}/artifacts-tmp.XXXXXXXXXX")"
+SCANNER_WORKDIR="$(mktemp -d "${PWD}/workdir-tmp.XXXXXXXXXX")"
 PROJECT_KEY=$(plugin_read_config PROJECT_KEY)
 SCAN_ONLY_IF_SOURCES_CHANGED=$(plugin_read_config SCAN_ONLY_IF_SOURCES_CHANGED 'false')
 SONARQUBE_HOST=$(plugin_read_config SONARQUBE_HOST)
@@ -37,6 +38,9 @@ function execute_scanner() {
   DOCKER_CREATE_STATEMENT+=("docker" "create")
   DOCKER_CREATE_STATEMENT+=("--workdir" "${WORKDIR}")
 
+  mkdir "${SCANNER_WORKDIR}/.scannerwork"
+  docker_copy_as_sonar "${SCANNER_WORKDIR}/.scannerwork" "${DOCKERID}:${WORKDIR}"
+
   if [[ $IS_DOTNET == "true" ]]; then
     DOCKER_CREATE_STATEMENT+=("--env" "SONARQUBE_LOGIN=${SONARQUBE_LOGIN}")
   fi
@@ -51,7 +55,7 @@ function execute_scanner() {
   echo "Running ${DOCKER_CREATE_STATEMENT[*]/${SONARQUBE_LOGIN}/**********}"
   DOCKERID=$("${DOCKER_CREATE_STATEMENT[@]}")
 
-  docker_copy_as_sonar "${PWD}" "${DOCKERID}:${WORKDIR}"
+  docker_copy_as_sonar "${PWD}/." "${DOCKERID}:${WORKDIR}"
 
   if [ -n "${ARTIFACT_PATHS[*]}" ]; then
     for arg in "${ARTIFACT_PATHS[@]}"; do
@@ -61,7 +65,7 @@ function execute_scanner() {
         "${LOCAL_ARTIFACTS_DIR}"
     done
 
-    docker_copy_as_sonar "${LOCAL_ARTIFACTS_DIR}" "${DOCKERID}:${WORKDIR}"
+    docker_copy_as_sonar "${LOCAL_ARTIFACTS_DIR}/." "${DOCKERID}:${WORKDIR}"
   fi
 
   echo "Running docker start -a ${DOCKERID}"
