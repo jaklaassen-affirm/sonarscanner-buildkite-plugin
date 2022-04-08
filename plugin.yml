@@ -27,6 +27,8 @@ configuration:
       type: boolean
     scan_only_if_sources_changed:
       type: boolean
+    scanner_home:
+      type: string
     sources:
       type: string
     uses_community_edition:

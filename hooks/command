@@ -25,6 +25,9 @@ SOURCES=$(plugin_read_config SOURCES '.')
 USES_COMMUNITY_EDITION=$(plugin_read_config USES_COMMUNITY_EDITION 'true')
 DEFAULT_WORKDIR="/workdir"
 WORKDIR="$(plugin_read_config WORKDIR "${DEFAULT_WORKDIR}")"
+SONAR_SCANNER_HOME="$(plugin_read_config SCANNER_HOME)"
+
+SONAR_SCANNER_HOME
 
 function execute_scanner() {
   echo "+++ :docker: :sonarqube: Starting sonar-scanner"
@@ -36,6 +39,10 @@ function execute_scanner() {
   DOCKER_CREATE_STATEMENT=()
   DOCKER_CREATE_STATEMENT+=("docker" "create")
   DOCKER_CREATE_STATEMENT+=("--workdir" "${WORKDIR}")
+
+  if [ -n "${SONAR_SCANNER_HOME}" ]; then
+    DOCKER_CREATE_STATEMENT+=("--volume" "${SONAR_SCANNER_HOME}:/home/sonar/.sonar/")
+  fi
 
   if [[ $IS_DOTNET == "true" ]]; then
     DOCKER_CREATE_STATEMENT+=("--env" "SONARQUBE_LOGIN=${SONARQUBE_LOGIN}")
