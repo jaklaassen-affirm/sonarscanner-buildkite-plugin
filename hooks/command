@@ -25,6 +25,10 @@ SOURCES=$(plugin_read_config SOURCES '.')
 USES_COMMUNITY_EDITION=$(plugin_read_config USES_COMMUNITY_EDITION 'true')
 DEFAULT_WORKDIR="/workdir"
 WORKDIR="$(plugin_read_config WORKDIR "${DEFAULT_WORKDIR}")"
+SONAR_SCANNER_HOME="$(plugin_read_config SCANNER_HOME)"
+SONARSCANNER_IMAGE="$(plugin_read_config SCANNER_IMAGE)"
+
+echo "SONAR_SCANNER_IMAGE=${SONARSCANNER_IMAGE}"
 
 function execute_scanner() {
   echo "+++ :docker: :sonarqube: Starting sonar-scanner"
@@ -51,8 +55,20 @@ function execute_scanner() {
   echo "Running ${DOCKER_CREATE_STATEMENT[*]/${SONARQUBE_LOGIN}/**********}"
   DOCKERID=$("${DOCKER_CREATE_STATEMENT[@]}")
 
-  docker_copy_as_sonar "${PWD}/." "${DOCKERID}:${WORKDIR}"
+  if [ -n "${SOURCE_PATHS[*]}" ]; then
+    for arg in "${SOURCE_PATHS[@]}"; do
+      docker_copy_as_sonar "${PWD}" "${arg}" "${DOCKERID}:${WORKDIR}"
+    done
 
+  fi
+
+
+  if [[ -n $SONAR_SCANNER_HOME ]]; then
+    if [[ ! -d $SONAR_SCANNER_HOME ]]; then
+      mkdir "$SONAR_SCANNER_HOME"
+    fi
+    docker_copy_as_sonar "${SONAR_SCANNER_HOME}" "." "${DOCKERID}:/home/sonar"
+  fi
 
   if [ -n "${ARTIFACT_PATHS[*]}" ]; then
     for arg in "${ARTIFACT_PATHS[@]}"; do
@@ -62,11 +78,16 @@ function execute_scanner() {
         "${LOCAL_ARTIFACTS_DIR}"
     done
 
-    docker_copy_as_sonar "${LOCAL_ARTIFACTS_DIR}/." "${DOCKERID}:${WORKDIR}"
+    docker_copy_as_sonar "${LOCAL_ARTIFACTS_DIR}" "." "${DOCKERID}:${WORKDIR}"
   fi
 
   echo "Running docker start -a ${DOCKERID}"
   docker start -a "${DOCKERID}"
+
+  if [[ -n $SONAR_SCANNER_HOME ]]; then
+    docker cp "${DOCKERID}:/home/sonar/." "${SONAR_SCANNER_HOME}/"
+  fi
+
 }
 
 function check_if_sources_changed() {
@@ -117,12 +138,16 @@ fi
 echo "SCAN_ONLY_IF_SOURCES_CHANGED set to $SCAN_ONLY_IF_SOURCES_CHANGED"
 
 if [[ $IS_DOTNET == "false" ]]; then
-  SONARSCANNER_IMAGE="sonarscannerbuildkite/sonarscanner:${PLUGIN_VERSION}"
+  if [[ -z $SONARSCANNER_IMAGE ]]; then
+    SONARSCANNER_IMAGE="sonarscannerbuildkite/sonarscanner:${PLUGIN_VERSION}"
+  fi
   PROJECT_KEY_PARAMETER="-Dsonar.projectKey="
   PARAMETER_PREFIX="-D"
   SONARSCANNER_ARGS+=("-Dsonar.sources=${SOURCES}")
 else
-  SONARSCANNER_IMAGE="sonarscannerbuildkite/sonarscanner-dotnet:${PLUGIN_VERSION}"
+  if [[ -z $SONARSCANNER_IMAGE ]]; then
+    SONARSCANNER_IMAGE="sonarscannerbuildkite/sonarscanner-dotnet:${PLUGIN_VERSION}"
+  fi
   PROJECT_KEY_PARAMETER="/k:"
   PARAMETER_PREFIX="/d:"
 fi
@@ -147,6 +172,12 @@ elif plugin_read_list_into_result BUILDKITE_PLUGIN_SONARSCANNER_ARTIFACTS; then
     ARTIFACT_PATHS+=("${arg}")
   done
 fi
+
+SOURCE_PATHS=()
+if [[ -n $SOURCES ]]; then
+  SOURCE_PATHS+=("$SOURCES")
+fi
+
 
 if [[ $WORKDIR != $DEFAULT_WORKDIR ]]; then
   mkdir "${LOCAL_ARTIFACTS_DIR}/.scannerwork"
