@@ -38,10 +38,6 @@ function execute_scanner() {
   DOCKER_CREATE_STATEMENT+=("docker" "create")
   DOCKER_CREATE_STATEMENT+=("--workdir" "${WORKDIR}")
 
-  if [[ -n $SONAR_SCANNER_HOME ]]; then
-    DOCKER_CREATE_STATEMENT+=("--volume" "${SONAR_SCANNER_HOME}:/home/sonar/.sonar/")
-  fi
-
   if [[ $IS_DOTNET == "true" ]]; then
     DOCKER_CREATE_STATEMENT+=("--env" "SONARQUBE_LOGIN=${SONARQUBE_LOGIN}")
   fi
@@ -58,6 +54,9 @@ function execute_scanner() {
 
   docker_copy_as_sonar "${PWD}/." "${DOCKERID}:${WORKDIR}"
 
+  if [[ -n $SONAR_SCANNER_HOME ]]; then
+    docker_copy_as_sonar "${SONAR_SCANNER_HOME}/." "${DOCKERID}:/home/sonar"
+  fi
 
   if [ -n "${ARTIFACT_PATHS[*]}" ]; then
     for arg in "${ARTIFACT_PATHS[@]}"; do
@@ -72,6 +71,11 @@ function execute_scanner() {
 
   echo "Running docker start -a ${DOCKERID}"
   docker start -a "${DOCKERID}"
+
+  if [[ -n $SONAR_SCANNER_HOME ]]; then
+    docker cp "${DOCKERID}:/home/sonar/." "${SONAR_SCANNER_HOME}/"
+  fi
+
 }
 
 function check_if_sources_changed() {
