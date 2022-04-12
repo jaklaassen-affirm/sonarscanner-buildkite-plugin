@@ -55,7 +55,9 @@ function execute_scanner() {
   docker_copy_as_sonar "${PWD}/." "${DOCKERID}:${WORKDIR}"
 
   if [[ -n $SONAR_SCANNER_HOME ]]; then
-    touch "${SONAR_SCANNER_HOME}/placeholder"
+    if [[ ! -d $SONAR_SCANNER_HOME ]]
+      mkdir "$SONAR_SCANNER_HOME"
+    fi
     docker_copy_as_sonar "${SONAR_SCANNER_HOME}/." "${DOCKERID}:/home/sonar"
   fi
 
