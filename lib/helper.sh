@@ -29,8 +29,8 @@ function plugin_read_list_into_result() {
 }
 
 function docker_copy_as_sonar() {
-  echo "$(date)  Running tar -cf - --owner 1000 --group 1000 -C ${1%/*} ${1##*/} | docker cp - ${2}"
-  tar -cf - --owner 1000 --group 1000 -C "${1%/*}" "${1##*/}" | docker cp - "${2}"
+  echo "$(date)  Running tar -cf - --owner 1000 --group 1000 -C ${1} ${2} | docker cp - ${3}"
+  tar -cf - --owner 1000 --group 1000 -C "${1}" "${2}" | docker cp - "${3}"
 }
 
 function cleanup() {

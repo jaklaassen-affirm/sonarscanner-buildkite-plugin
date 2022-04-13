@@ -52,13 +52,19 @@ function execute_scanner() {
   echo "$(date)  Running ${DOCKER_CREATE_STATEMENT[*]/${SONARQUBE_LOGIN}/**********}"
   DOCKERID=$("${DOCKER_CREATE_STATEMENT[@]}")
 
-  docker_copy_as_sonar "${PWD}/." "${DOCKERID}:${WORKDIR}"
+  if [ -n "${SOURCE_PATHS[*]}" ]; then
+    for arg in "${SOURCE_PATHS[@]}"; do
+      docker_copy_as_sonar "${PWD}" "${arg}" "${DOCKERID}:${WORKDIR}"
+    done
+
+  fi
+
 
   if [[ -n $SONAR_SCANNER_HOME ]]; then
     if [[ ! -d $SONAR_SCANNER_HOME ]]; then
       mkdir "$SONAR_SCANNER_HOME"
     fi
-    docker_copy_as_sonar "${SONAR_SCANNER_HOME}/." "${DOCKERID}:/home/sonar"
+    docker_copy_as_sonar "${SONAR_SCANNER_HOME}" "." "${DOCKERID}:/home/sonar"
   fi
 
   if [ -n "${ARTIFACT_PATHS[*]}" ]; then
@@ -69,7 +75,7 @@ function execute_scanner() {
         "${LOCAL_ARTIFACTS_DIR}"
     done
 
-    docker_copy_as_sonar "${LOCAL_ARTIFACTS_DIR}/." "${DOCKERID}:${WORKDIR}"
+    docker_copy_as_sonar "${LOCAL_ARTIFACTS_DIR}" "/." "${DOCKERID}:${WORKDIR}"
   fi
 
   echo "Running docker start -a ${DOCKERID}"
@@ -159,6 +165,12 @@ elif plugin_read_list_into_result BUILDKITE_PLUGIN_SONARSCANNER_ARTIFACTS; then
     ARTIFACT_PATHS+=("${arg}")
   done
 fi
+
+SOURCE_PATHS=()
+if [[ -n $SOURCES ]]; then
+  SOURCE_PATHS+=("$SOURCES")
+fi
+
 
 if [[ $WORKDIR != $DEFAULT_WORKDIR ]]; then
   mkdir "${LOCAL_ARTIFACTS_DIR}/.scannerwork"
