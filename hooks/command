@@ -49,7 +49,7 @@ function execute_scanner() {
   DOCKER_CREATE_STATEMENT+=("${SONARSCANNER_IMAGE}" "${SONARSCANNER_ARGS[@]}")
 
   # Masks SONARQUBE_LOGIN to prevent leaked creds
-  echo "Running ${DOCKER_CREATE_STATEMENT[*]/${SONARQUBE_LOGIN}/**********}"
+  echo "$(date)  Running ${DOCKER_CREATE_STATEMENT[*]/${SONARQUBE_LOGIN}/**********}"
   DOCKERID=$("${DOCKER_CREATE_STATEMENT[@]}")
 
   docker_copy_as_sonar "${PWD}/." "${DOCKERID}:${WORKDIR}"
