@@ -75,7 +75,7 @@ function execute_scanner() {
         "${LOCAL_ARTIFACTS_DIR}"
     done
 
-    docker_copy_as_sonar "${LOCAL_ARTIFACTS_DIR}" "/." "${DOCKERID}:${WORKDIR}"
+    docker_copy_as_sonar "${LOCAL_ARTIFACTS_DIR}" "." "${DOCKERID}:${WORKDIR}"
   fi
 
   echo "Running docker start -a ${DOCKERID}"
