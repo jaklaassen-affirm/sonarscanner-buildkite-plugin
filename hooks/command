@@ -26,9 +26,9 @@ USES_COMMUNITY_EDITION=$(plugin_read_config USES_COMMUNITY_EDITION 'true')
 DEFAULT_WORKDIR="/workdir"
 WORKDIR="$(plugin_read_config WORKDIR "${DEFAULT_WORKDIR}")"
 SONAR_SCANNER_HOME="$(plugin_read_config SCANNER_HOME)"
-SONAR_SCANNER_IMAGE="$(plugin_read_config SCANNER_IMAGE)"
+SONARSCANNER_IMAGE="$(plugin_read_config SCANNER_IMAGE)"
 
-echo "SONAR_SCANNER_IMAGE=${SONAR_SCANNER_IMAGE}"
+echo "SONAR_SCANNER_IMAGE=${}"
 
 function execute_scanner() {
   echo "+++ :docker: :sonarqube: Starting sonar-scanner"
@@ -138,14 +138,14 @@ fi
 echo "SCAN_ONLY_IF_SOURCES_CHANGED set to $SCAN_ONLY_IF_SOURCES_CHANGED"
 
 if [[ $IS_DOTNET == "false" ]]; then
-  if [[ -n $SONAR_SCANNER_IMAGE ]]; then
+  if [[ -z $SONARSCANNER_IMAGE ]]; then
     SONARSCANNER_IMAGE="sonarscannerbuildkite/sonarscanner:${PLUGIN_VERSION}"
   fi
   PROJECT_KEY_PARAMETER="-Dsonar.projectKey="
   PARAMETER_PREFIX="-D"
   SONARSCANNER_ARGS+=("-Dsonar.sources=${SOURCES}")
 else
-  if [[ -n $SONAR_SCANNER_IMAGE ]]; then
+  if [[ -z $SONARSCANNER_IMAGE ]]; then
     SONARSCANNER_IMAGE="sonarscannerbuildkite/sonarscanner-dotnet:${PLUGIN_VERSION}"
   fi
   PROJECT_KEY_PARAMETER="/k:"
