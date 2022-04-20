@@ -28,6 +28,8 @@ WORKDIR="$(plugin_read_config WORKDIR "${DEFAULT_WORKDIR}")"
 SONAR_SCANNER_HOME="$(plugin_read_config SCANNER_HOME)"
 SONAR_SCANNER_IMAGE="$(plugin_read_config SCANNER_IMAGE)"
 
+echo "SONAR_SCANNER_IMAGE=${SONAR_SCANNER_IMAGE}"
+
 function execute_scanner() {
   echo "+++ :docker: :sonarqube: Starting sonar-scanner"
 
