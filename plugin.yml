@@ -29,6 +29,8 @@ configuration:
       type: boolean
     scanner_home:
       type: string
+    scanner_image:
+      type: string
     sources:
       type: string
     uses_community_edition:
