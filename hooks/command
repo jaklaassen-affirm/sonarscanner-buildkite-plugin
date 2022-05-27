@@ -73,9 +73,11 @@ function execute_scanner() {
   if [ -n "${ARTIFACT_PATHS[*]}" ]; then
     for arg in "${ARTIFACT_PATHS[@]}"; do
       echo "Running buildkite-agent artifact download ${arg} ${LOCAL_ARTIFACTS_DIR}"
-      buildkite-agent artifact download \
-        "${arg}" \
-        "${LOCAL_ARTIFACTS_DIR}"
+      ret=0
+      buildkite-agent artifact download "${arg}" "${LOCAL_ARTIFACTS_DIR}" || ret=$?
+      if (( ret > 1 )); then
+        exit $ret
+      fi
     done
 
     docker_copy_as_sonar "${LOCAL_ARTIFACTS_DIR}" "." "${DOCKERID}:${WORKDIR}"
