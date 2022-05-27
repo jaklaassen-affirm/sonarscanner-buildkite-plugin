@@ -75,6 +75,10 @@ function execute_scanner() {
       echo "Running buildkite-agent artifact download ${arg} ${LOCAL_ARTIFACTS_DIR}"
       ret=0
       buildkite-agent artifact download "${arg}" "${LOCAL_ARTIFACTS_DIR}" || ret=$?
+      if [ $ret -eq 1 ]; then
+        # Can't find test artifacts. Skip this build because nosetests didn't run.
+        exit 0
+      fi
       if (( ret > 1 )); then
         exit $ret
       fi
