@@ -59,9 +59,11 @@ function execute_scanner() {
     for arg in "${SOURCE_PATHS[@]}"; do
       docker_copy_as_sonar "${PWD}" "${arg}" "${DOCKERID}:${WORKDIR}"
     done
-
   fi
 
+  if [[ -d ".git" ]]; then
+    docker_copy_as_sonar "${PWD}" ".git" "${DOCKERID}:${WORKDIR}"
+  fi
 
   if [[ -n $SONAR_SCANNER_HOME ]]; then
     if [[ ! -d $SONAR_SCANNER_HOME ]]; then
